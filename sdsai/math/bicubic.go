@@ -69,6 +69,9 @@ func BicubicInterpolator(
 
 	isValidFn := func(x, y float64) bool {
 		if x < xval[1] || x > xval[len(xval)-2] || y < yval[1] || y > yval[len(yval)-2] {
+			// println("----------------")
+			// println(x, xval[1], xval[len(xval)-2], y, yval[1], yval[len(yval)-2])
+			// println("----------------")
 			return false
 		} else {
 			return true
