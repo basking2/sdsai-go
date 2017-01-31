@@ -14,7 +14,7 @@ func evaluation(coefficients []float64, arg float64) float64 {
 	return result
 }
 
-func LinearInterpolation(x, y []float64) (func(float64)(float64, error), error) {
+func LinearInterpolator(x, y []float64) (func(float64)(float64, error), error) {
 	if len(x) != len(y) {
 		return nil, errors.New("x and y dimensions must be the same length.")
 	}
