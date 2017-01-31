@@ -4,10 +4,11 @@ package math
 
 import (
 	"testing"
+	"math"
 )
 
 func TestLinearInterpolator(t *testing.T) {
-	li,err := LinearInterpolator([]float64{0, 1}, []float64{3, 4})
+	li,err := LinearInterpolator([]float64{0, 1}, []float64{0, 1})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -17,5 +18,7 @@ func TestLinearInterpolator(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	println(v)
+	if math.Abs(v - 0.5) > 000.1 {
+		t.Fatal("Expected near 0.5 but got ", v)
+	}
 }
