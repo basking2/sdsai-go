@@ -32,7 +32,7 @@ func (bf BoxFilter) Filter64(data []float64, height, width int) []float64 {
 			if x - bf.before < 0 {
 				start = 0
 			} else {
-				stop = x - bf.before
+				start = x - bf.before
 			}
 
 			if x + bf.after < width {
@@ -61,7 +61,7 @@ func (bf BoxFilter) Filter64(data []float64, height, width int) []float64 {
 	}
 
 	for y := 0; y < height; y++ {
-		for x := 0; x < width; x ++ {
+		for x := 0; x < width; x++ {
 			var start int
 			var stop int
 			if y - bf.before < 0 {
@@ -110,7 +110,7 @@ func (bf BoxFilter) Filter32(data []float32, height, width int) []float32 {
 			if x - bf.before < 0 {
 				start = 0
 			} else {
-				stop = x - bf.before
+				start = x - bf.before
 			}
 
 			if x + bf.after < width {
@@ -139,7 +139,7 @@ func (bf BoxFilter) Filter32(data []float32, height, width int) []float32 {
 	}
 
 	for y := 0; y < height; y++ {
-		for x := 0; x < width; x ++ {
+		for x := 0; x < width; x++ {
 			var start int
 			var stop int
 			if y - bf.before < 0 {
