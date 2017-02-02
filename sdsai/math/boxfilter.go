@@ -89,6 +89,8 @@ func (bf BoxFilter) Filter64(data []float64, height, width int) []float64 {
 
 			if count > (bf.before + bf.after + 1)/2 {
 				result[1][x + y * width] = value / float64(count)
+			} else {
+				result[1][x + y * width] = gomath.NaN()
 			}
 		}
 	}
@@ -167,6 +169,8 @@ func (bf BoxFilter) Filter32(data []float32, height, width int) []float32 {
 
 			if count > (bf.before + bf.after + 1)/2 {
 				result[1][x + y * width] = value / float32(count)
+			} else {
+				result[1][x + y * width] = float32(gomath.NaN())
 			}
 		}
 	}
