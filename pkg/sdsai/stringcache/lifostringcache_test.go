@@ -9,12 +9,15 @@ import (
 func TestLIFOStringCache(t *testing.T) {
 
 	cache := NewLIFOStringCache()
+	cache.TimeFunction = func() int64 {
+		return time.Now().UnixNano()
+	}
 
 	t.Run("Add", func(t *testing.T) {
 		heap.Push(cache, "string 1")
 		heap.Push(cache, "string 2")
 
-		d, _ := time.ParseDuration("1s")
+		d, _ := time.ParseDuration("10ms")
 		time.Sleep(d)
 		heap.Push(cache, "string 3")
 		time.Sleep(d)
