@@ -2,7 +2,6 @@ package cache
 
 import (
 	"hash/crc32"
-	"math"
 	"sync"
 )
 
@@ -79,14 +78,24 @@ func (c *ConcurrentRingCache) Get(key string) (interface{}, bool) {
 
 // Evict items from every sub-cache until they contain the ceiling of 1/N
 // items where N is the size limit for this entire cache.
-func (c *ConcurrentRingCache) EnforceDistributedSizeLimit() {
-	limit := int(math.Ceil(float64(c.SizeLimit) / float64(c.RingSize)))
+func (c *ConcurrentRingCache) EnforceSizeLimit() {
+	limit := c.SizeLimit
 
 	for i := 0; i < c.RingSize; i++ {
 		c.Locks[i].Lock()
 		for c.Caches[i].Len() > limit {
 			c.Caches[i].EvictNext()
 		}
+		c.Locks[i].Unlock()
+	}
+}
+
+func (c *ConcurrentRingCache) EvictOrderThan(tm int64) {
+	for i := 0; i < c.RingSize; i++ {
+		c.Locks[i].Lock()
+
+		c.Caches[i].EvictOlderThan(tm)
+
 		c.Locks[i].Unlock()
 	}
 }

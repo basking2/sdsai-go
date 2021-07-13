@@ -15,7 +15,7 @@ func TestConcurrentRingCache(t *testing.T) {
 			evicted += 1
 		})
 
-		cache.EnforceDistributedSizeLimit()
+		cache.EnforceSizeLimit()
 	}
 
 	if evicted != 95 {

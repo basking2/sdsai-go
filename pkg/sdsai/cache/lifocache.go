@@ -150,8 +150,7 @@ func (c *LIFOCache) Pop() interface{} {
 func (c *LIFOCache) PutWithHandler(key string, item interface{}, evictionhandler func(string, interface{})) (interface{}, bool) {
 
 	if _, ok := c.Indexes[key]; ok {
-		// Pushing, in this case, is moving the string to the end and
-		// updateing the time.
+		// Update the time and re-heap.
 		i := c.Indexes[key]
 		o := c.Items[i]
 		c.AddedTime[i] = c.TimeFunction()
@@ -183,7 +182,6 @@ func (c *LIFOCache) Get(key string) (interface{}, bool) {
 // Evict the next item, returning the key and value.
 //
 // If the cache is empty "" and nil are returned.
-//
 func (c *LIFOCache) EvictNext() (string, interface{}) {
 	if len(c.Keys) > 0 {
 		k := c.Keys[0]
@@ -191,6 +189,22 @@ func (c *LIFOCache) EvictNext() (string, interface{}) {
 		return k, i
 	} else {
 		return "", nil
+	}
+}
+
+// Evict items that are older than the given tm.
+// That is the object's added time is less-than tm.
+func (c *LIFOCache) EvictOlderThan(tm int64) {
+	for len(c.AddedTime) > 0 && c.AddedTime[0] < tm {
+		c.EvictNext()
+	}
+}
+
+// Set the added time of an item and re-heap it.
+func (c *LIFOCache) SetAddedTime(key string, tm int64) {
+	if idx, ok := c.Indexes[key]; ok {
+		c.AddedTime[idx] = tm
+		heap.Fix(c, idx)
 	}
 }
 
