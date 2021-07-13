@@ -1,4 +1,4 @@
-package stringcache
+package cache
 
 import (
 	"testing"

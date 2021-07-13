@@ -1,4 +1,4 @@
-package stringcache
+package cache
 
 import (
 	"container/heap"
@@ -9,6 +9,10 @@ import (
 //
 // This also allows for a string to be refreshed. That is, be put
 // at the back of the line.
+//
+// This cache implementation does not enforce a size limit. It only
+// orders items for eviction. The user must evict them to reach a desired
+// Len() (size).
 type LIFOCache struct {
 	// The heap of strings.
 	Keys []string
@@ -190,6 +194,7 @@ func (c *LIFOCache) EvictNext() (string, interface{}) {
 	}
 }
 
+// Remove the given key from the cache.
 func (c *LIFOCache) Remove(key string) (interface{}, bool) {
 	if i, ok := c.Indexes[key]; ok {
 		obj := c.Items[i]
@@ -215,4 +220,19 @@ func (c *LIFOCache) Remove(key string) (interface{}, bool) {
 	} else {
 		return nil, false
 	}
+}
+
+// Return the next key to be returned by a call to EvictNext().
+func (c *LIFOCache) MinKey() string {
+	return c.Keys[0]
+}
+
+// Return the time of the next key and item to be returned by a call to EvictNext().
+func (c *LIFOCache) MinTime() int64 {
+	return c.AddedTime[0]
+}
+
+// Return next item to be returned by a call to EvictNext().
+func (c *LIFOCache) MinItem() interface{} {
+	return c.Items[0]
 }
