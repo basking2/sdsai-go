@@ -98,7 +98,7 @@ func (c *LIFOCache) Push(x interface{}) {
 			c.Swap(i, len(c.Items)-1)
 		} else {
 			// Add string.
-			c.Indexes[s] = len(c.Items)
+			c.Indexes[s] = len(c.Keys)
 			c.AddedTime = append(c.AddedTime, c.TimeFunction())
 			c.Keys = append(c.Keys, s)
 
