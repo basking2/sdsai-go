@@ -1,7 +1,12 @@
+# GO_TEST_ARGS?=-v -count=1
+
 all:
 	go build ./...
 
-check:
-	go test ./...
+test:
+	go test $(GO_TEST_ARGS) ./...
 
-.PHONY: all
+clean:
+	go clean ./...
+
+.PHONY: all test clean
