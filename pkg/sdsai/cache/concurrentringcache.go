@@ -17,7 +17,7 @@ type ConcurrentRingCache struct {
 	SizeLimit int
 	RingSize  int
 	Caches    []*LIFOCache
-	Locks     []sync.RWMutex
+	Locks     []*sync.RWMutex
 
 	// A function that hashes a string into one of the caches in the Caches array.
 	// The ringSize is the length of the Cache and Locks arrays.
@@ -30,7 +30,7 @@ func NewConcurrentRingCache(ringSize int, cacheSize int) *ConcurrentRingCache {
 	c.RingSize = ringSize
 	c.SizeLimit = cacheSize
 	c.Caches = make([]*LIFOCache, ringSize)
-	c.Locks = make([]sync.RWMutex, ringSize)
+	c.Locks = make([]*sync.RWMutex, ringSize)
 	c.KeyHash = func(s string, ringSize int) int {
 		h := int(crc32.ChecksumIEEE([]byte(s)))
 
@@ -45,7 +45,7 @@ func NewConcurrentRingCache(ringSize int, cacheSize int) *ConcurrentRingCache {
 
 	for i := 0; i < ringSize; i++ {
 		c.Caches[i] = NewLIFOCache()
-		c.Locks[i] = sync.RWMutex{}
+		c.Locks[i] = &sync.RWMutex{}
 	}
 
 	return &c
