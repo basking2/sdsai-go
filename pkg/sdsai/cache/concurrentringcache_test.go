@@ -6,9 +6,8 @@ import (
 )
 
 func TestConcurrentRingCache(t *testing.T) {
-	cache := NewConcurrentRingCache(1)
+	cache := NewConcurrentRingCache(1, 5)
 
-	cache.SizeLimit = 5
 	evicted := 0
 
 	for i := 0; i < 100; i++ {

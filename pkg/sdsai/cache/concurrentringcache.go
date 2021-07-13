@@ -25,10 +25,11 @@ type ConcurrentRingCache struct {
 	KeyHash func(key string, ringSize int) int
 }
 
-func NewConcurrentRingCache(ringSize int) *ConcurrentRingCache {
+func NewConcurrentRingCache(ringSize int, cacheSize int) *ConcurrentRingCache {
 	c := ConcurrentRingCache{}
 
 	c.RingSize = ringSize
+	c.SizeLimit = cacheSize
 	c.Caches = make([]*LIFOCache, ringSize)
 	c.Locks = make([]sync.RWMutex, ringSize)
 	c.KeyHash = func(s string, ringSize int) int {
