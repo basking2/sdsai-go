@@ -52,6 +52,8 @@ func NewConcurrentRingCache(ringSize int, cacheSize int) *ConcurrentRingCache {
 }
 
 // Lock each sub-cache and pass it to the handler function.
+//
+// Each cache is locked as writable first.
 func (c *ConcurrentRingCache) EachSubCache(f func(*LIFOCache)) {
 	for i := 0; i < c.RingSize; i++ {
 		c.Locks[i].Lock()
@@ -92,23 +94,17 @@ func (c *ConcurrentRingCache) Get(key string) (interface{}, bool) {
 func (c *ConcurrentRingCache) EnforceSizeLimit() {
 	limit := c.SizeLimit
 
-	for i := 0; i < c.RingSize; i++ {
-		c.Locks[i].Lock()
-		for c.Caches[i].Len() > limit {
-			c.Caches[i].EvictNext()
+	c.EachSubCache(func(c *LIFOCache) {
+		for c.Len() > limit {
+			c.EvictNext()
 		}
-		c.Locks[i].Unlock()
-	}
+	})
 }
 
 func (c *ConcurrentRingCache) EvictOrderThan(tm int64) {
-	for i := 0; i < c.RingSize; i++ {
-		c.Locks[i].Lock()
-
-		c.Caches[i].EvictOlderThan(tm)
-
-		c.Locks[i].Unlock()
-	}
+	c.EachSubCache(func(c *LIFOCache) {
+		c.EvictOlderThan(tm)
+	})
 }
 
 func (c *ConcurrentRingCache) Size() int {
