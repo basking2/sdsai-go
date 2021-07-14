@@ -51,6 +51,17 @@ func NewConcurrentRingCache(ringSize int, cacheSize int) *ConcurrentRingCache {
 	return &c
 }
 
+// Lock each sub-cache and pass it to the handler function.
+func (c *ConcurrentRingCache) EachSubCache(f func(*LIFOCache)) {
+	for i := 0; i < c.RingSize; i++ {
+		c.Locks[i].Lock()
+
+		f(c.Caches[i])
+
+		c.Locks[i].Unlock()
+	}
+}
+
 // Add an item and enforce the cache size limit.
 func (c *ConcurrentRingCache) Put(key string, item interface{}) {
 	h := c.KeyHash(key, c.RingSize)

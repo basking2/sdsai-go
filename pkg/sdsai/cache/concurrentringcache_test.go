@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"sync"
 	"testing"
+	"time"
 )
 
 func TestConcurrentRingCache(t *testing.T) {
@@ -42,4 +43,22 @@ func TestConcurrentRingCacheConcurrent(t *testing.T) {
 	}
 
 	wg.Wait()
+}
+
+func TestConcurrentRingCacheTimeEvict(t *testing.T) {
+	cache := NewConcurrentRingCache(10, 5)
+	called := false
+	cache.EachSubCache(func(c *LIFOCache) {
+		c.TimeFunction = func() int64 {
+			return time.Now().UnixNano()
+		}
+	})
+	cache.PutWithHandler("hi", "hellooooo", func(string, interface{}) { called = true })
+
+	cache.EvictOrderThan(time.Now().UnixNano() + 1000)
+
+	if !called {
+		t.Errorf("Did not call eviction callback.")
+	}
+
 }
