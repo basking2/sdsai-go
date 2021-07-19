@@ -18,8 +18,9 @@ func (*IntMaker) Check(interface{}) error {
 	return nil
 }
 
-func (*IntMaker) Destroy(interface{}) {
+func (*IntMaker) Destroy(interface{}) error {
 	wg.Done()
+	return nil
 }
 
 func TestResourcePool(t *testing.T) {

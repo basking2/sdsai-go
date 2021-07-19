@@ -6,7 +6,6 @@ import (
 
 // How to move a resource through its lifetime.
 // Create, Check, and Destroy.
-
 type ResourceManager interface {
 	// Create a resource and return it.
 	Create() (interface{}, error)
@@ -15,14 +14,22 @@ type ResourceManager interface {
 	Check(interface{}) error
 
 	// Destroy a resource.
-	Destroy(interface{})
+	Destroy(interface{}) error
 }
 
+// A resource record.
 type Resource struct {
-	Uses      int
+	// The number of times this resource was fetched from the pool.
+	Uses int
+
+	// The time.Now().Unix() for when this object was created.
 	CreatedAt int64
-	Resource  interface{}
-	Destroy   bool
+
+	// The created resource.
+	Resource interface{}
+
+	// The pool this resource came from.
+	Pool *ResourcePool
 }
 
 type ResourcePool struct {
@@ -31,6 +38,15 @@ type ResourcePool struct {
 	ResourceManager ResourceManager
 	FreeResources   chan *Resource
 	CreateResources chan int
+}
+
+func (r *Resource) Close() error {
+	r.Pool.ReturnResource(r)
+	return nil
+}
+
+func (r *Resource) Destroy() error {
+	return r.Pool.DestroyResource(r)
 }
 
 func (pool *ResourcePool) UseResource(f func(*Resource) error) error {
@@ -53,8 +69,8 @@ func (pool *ResourcePool) GetResource() (*Resource, error) {
 			return &Resource{
 				Uses:      1,
 				CreatedAt: time.Now().Unix(),
+				Pool:      pool,
 				Resource:  r,
-				Destroy:   false,
 			}, nil
 		} else {
 			return nil, e
@@ -62,21 +78,22 @@ func (pool *ResourcePool) GetResource() (*Resource, error) {
 	}
 }
 
-func (pool *ResourcePool) DestroyResource(r *Resource) {
-	pool.ResourceManager.Destroy(r.Resource)
+func (pool *ResourcePool) DestroyResource(r *Resource) error {
+	e := pool.ResourceManager.Destroy(r.Resource)
 
 	pool.CreateResources <- 1
+
+	return e
 }
 
-func (pool *ResourcePool) ReturnResource(r *Resource) {
-	if r.Destroy {
-		pool.DestroyResource(r)
-	} else if pool.MaxUses > 0 && r.Uses >= pool.MaxUses {
-		pool.DestroyResource(r)
+func (pool *ResourcePool) ReturnResource(r *Resource) error {
+	if pool.MaxUses > 0 && r.Uses >= pool.MaxUses {
+		return pool.DestroyResource(r)
 	} else if pool.MaxAge > 0 && time.Now().Unix()-r.CreatedAt > pool.MaxAge {
-		pool.DestroyResource(r)
+		return pool.DestroyResource(r)
 	} else {
 		pool.FreeResources <- r
+		return nil
 	}
 }
 
