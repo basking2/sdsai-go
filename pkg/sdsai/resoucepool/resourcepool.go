@@ -1,6 +1,11 @@
 package resourcepool
 
-import "time"
+import (
+	"time"
+)
+
+// How to move a resource through its lifetime.
+// Create, Check, and Destroy.
 
 type ResourceManager interface {
 	// Create a resource and return it.
@@ -43,7 +48,7 @@ func (pool *ResourcePool) GetResource() (*Resource, error) {
 		v.Uses += 1
 		return v, nil
 
-	case _ = <-pool.CreateResources:
+	case <-pool.CreateResources:
 		if r, e := pool.ResourceManager.Create(); e == nil {
 			return &Resource{
 				Uses:      1,
@@ -57,7 +62,7 @@ func (pool *ResourcePool) GetResource() (*Resource, error) {
 	}
 }
 
-func (pool *ResourcePool) Destroy(r *Resource) {
+func (pool *ResourcePool) DestroyResource(r *Resource) {
 	pool.ResourceManager.Destroy(r.Resource)
 
 	pool.CreateResources <- 1
@@ -65,11 +70,11 @@ func (pool *ResourcePool) Destroy(r *Resource) {
 
 func (pool *ResourcePool) ReturnResource(r *Resource) {
 	if r.Destroy {
-		pool.Destroy(r)
-	} else if pool.MaxUses > 0 && r.Uses > pool.MaxUses {
-		pool.Destroy(r)
+		pool.DestroyResource(r)
+	} else if pool.MaxUses > 0 && r.Uses >= pool.MaxUses {
+		pool.DestroyResource(r)
 	} else if pool.MaxAge > 0 && time.Now().Unix()-r.CreatedAt > pool.MaxAge {
-		pool.Destroy(r)
+		pool.DestroyResource(r)
 	} else {
 		pool.FreeResources <- r
 	}
