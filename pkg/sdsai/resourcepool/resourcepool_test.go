@@ -47,8 +47,8 @@ func TestResourcePool(t *testing.T) {
 		t.Error(err)
 	}
 
-	pool.ReturnResource(r1)
-	pool.ReturnResource(r2)
+	r1.Close()
+	r2.Close()
 
 	r1, err = pool.GetResource()
 	if err != nil {
@@ -60,8 +60,8 @@ func TestResourcePool(t *testing.T) {
 		t.Error(err)
 	}
 
-	pool.ReturnResource(r1)
-	pool.ReturnResource(r2)
+	r1.Close()
+	r2.Close()
 
 	wg.Wait()
 
