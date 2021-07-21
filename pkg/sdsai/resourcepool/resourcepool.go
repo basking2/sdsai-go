@@ -41,8 +41,7 @@ type ResourcePool struct {
 }
 
 func (r *Resource) Close() error {
-	r.Pool.ReturnResource(r)
-	return nil
+	return r.Pool.ReturnResource(r)
 }
 
 func (r *Resource) Destroy() error {
