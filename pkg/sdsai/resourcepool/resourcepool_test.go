@@ -5,9 +5,9 @@ import (
 	"testing"
 )
 
-type IntMaker struct{}
-
-var wg sync.WaitGroup = sync.WaitGroup{}
+type IntMaker struct {
+	Wg sync.WaitGroup
+}
 
 func (*IntMaker) Create() (interface{}, error) {
 	i := 1
@@ -18,21 +18,24 @@ func (*IntMaker) Check(interface{}) error {
 	return nil
 }
 
-func (*IntMaker) Destroy(interface{}) error {
-	wg.Done()
+func (i *IntMaker) Destroy(interface{}) error {
+	i.Wg.Done()
 	return nil
 }
 
 func TestResourcePool(t *testing.T) {
 
-	wg.Add(2)
+	im := IntMaker{}
+
+	im.Wg.Add(2)
 
 	pool, err := NewResourcePool(
-		&IntMaker{},
+		&im,
 		2,
 		2,
 		2,
 	)
+
 	if err != nil {
 		t.Error(err)
 	}
@@ -63,6 +66,38 @@ func TestResourcePool(t *testing.T) {
 	r1.Close()
 	r2.Close()
 
-	wg.Wait()
+	im.Wg.Wait()
+}
+
+func TestResourcePoolLoad(t *testing.T) {
+
+	itrs := 1000
+
+	im := IntMaker{}
+
+	im.Wg.Add(itrs)
+
+	pool, err := NewResourcePool(
+		&im,
+		itrs,
+		1,
+		-1,
+	)
+	if err != nil {
+		t.Error(err)
+	}
+
+	println(pool)
+
+	for i := 0; i < itrs; i++ {
+		go func() {
+			r, _ := pool.GetResource()
+			go func() {
+				r.Close()
+			}()
+		}()
+	}
+
+	im.Wg.Wait()
 
 }

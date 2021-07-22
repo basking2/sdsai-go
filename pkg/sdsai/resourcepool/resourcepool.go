@@ -87,9 +87,11 @@ func (pool *ResourcePool) DestroyResource(r *Resource) error {
 
 func (pool *ResourcePool) ReturnResource(r *Resource) error {
 	if pool.MaxUses > 0 && r.Uses >= pool.MaxUses {
-		return pool.DestroyResource(r)
+		err := pool.DestroyResource(r)
+		return err
 	} else if pool.MaxAge > 0 && time.Now().Unix()-r.CreatedAt > pool.MaxAge {
-		return pool.DestroyResource(r)
+		err := pool.DestroyResource(r)
+		return err
 	} else {
 		pool.FreeResources <- r
 		return nil
