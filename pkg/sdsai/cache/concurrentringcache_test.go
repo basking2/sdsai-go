@@ -8,7 +8,7 @@ import (
 )
 
 func TestConcurrentRingCache(t *testing.T) {
-	cache := NewConcurrentRingCache(1, 5)
+	cache := NewConcurrentRingCache(1, 5, -1)
 
 	evicted := 0
 
@@ -26,7 +26,7 @@ func TestConcurrentRingCache(t *testing.T) {
 }
 
 func TestConcurrentRingCacheConcurrent(t *testing.T) {
-	cache := NewConcurrentRingCache(10, 5)
+	cache := NewConcurrentRingCache(10, 5, -1)
 
 	wg := sync.WaitGroup{}
 	wg.Add(1000)
@@ -46,12 +46,10 @@ func TestConcurrentRingCacheConcurrent(t *testing.T) {
 }
 
 func TestConcurrentRingCacheTimeEvict(t *testing.T) {
-	cache := NewConcurrentRingCache(10, 5)
+	cache := NewConcurrentRingCache(10, 5, 100)
 	called := false
-	cache.EachSubCache(func(c *LIFOCache) {
-		c.TimeFunction = func() int64 {
-			return time.Now().UnixNano()
-		}
+	cache.SetTimeFunction(func() int64 {
+		return time.Now().UnixNano()
 	})
 	cache.PutWithHandler("hi", "hellooooo", func(string, interface{}) { called = true })
 
