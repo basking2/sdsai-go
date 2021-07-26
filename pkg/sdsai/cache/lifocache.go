@@ -171,8 +171,9 @@ func (c *LIFOCache) Put(key string, item interface{}) (interface{}, bool) {
 	return c.PutWithHandler(key, item, func(string, interface{}) {})
 }
 
-// Get the user data and the time it was added. The last returned boolean
-// indicates if the record was found at all.
+// Get the user data and the time it was added.
+// If the last boolean returned is false means that the key was not
+// found in the cache.
 //
 //     if item, addTime, ok := lifoCache.Get("key"); ok {
 //         ...

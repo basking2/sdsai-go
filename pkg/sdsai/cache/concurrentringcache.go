@@ -98,6 +98,16 @@ func (c *ConcurrentRingCache) PutWithHandler(key string, item interface{}, evict
 	c.Locks[h].Unlock()
 }
 
+// Get an item from the sub-cache that holds items for the given key.
+//
+// If the key is not found in the sub-cache, (nil, false) is returned.
+//
+// If the key is found in the sub-cache but it is expired, (item, false) is
+// returned where the item is the the expired data. The sub-cache
+// is also cleaned so that no item older than the AgeLimit remains.
+//
+// If the key is found in the sub-cache and it is not expired, (item, true)
+// is returned where the item is the user's data.
 func (c *ConcurrentRingCache) Get(key string) (interface{}, bool) {
 	h := c.KeyHash(key, c.RingSize)
 
@@ -119,7 +129,9 @@ func (c *ConcurrentRingCache) Get(key string) (interface{}, bool) {
 			c.Caches[h].EvictOlderThan(c.AgeLimit)
 
 			// And return that we couldn't find the item.
-			return nil, false
+			// NOTE: Even if expired, we do return the found item.
+			//       This gives the user more options.
+			return item, false
 		}
 	}
 
