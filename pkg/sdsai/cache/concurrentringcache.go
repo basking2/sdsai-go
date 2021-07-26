@@ -122,11 +122,13 @@ func (c *ConcurrentRingCache) Get(key string) (interface{}, bool) {
 	// If there is an age limit...
 	if c.AgeLimit >= 0 {
 
+		timeNow := c.Caches[h].TimeFunction()
+
 		// If the item is older than the age limit (using the cache's time function to get "now")...
-		if c.Caches[h].TimeFunction()-addedAt > c.AgeLimit {
+		if timeNow-addedAt > c.AgeLimit {
 
 			// Clean up only this cache...
-			c.Caches[h].EvictOlderThan(c.AgeLimit)
+			c.Caches[h].EvictOlderThan(timeNow - c.AgeLimit)
 
 			// And return that we couldn't find the item.
 			// NOTE: Even if expired, we do return the found item.
