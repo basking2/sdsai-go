@@ -171,11 +171,18 @@ func (c *LIFOCache) Put(key string, item interface{}) (interface{}, bool) {
 	return c.PutWithHandler(key, item, func(string, interface{}) {})
 }
 
-func (c *LIFOCache) Get(key string) (interface{}, bool) {
+// Get the user data and the time it was added. The last returned boolean
+// indicates if the record was found at all.
+//
+//     if item, addTime, ok := lifoCache.Get("key"); ok {
+//         ...
+//     }
+func (c *LIFOCache) Get(key string) (interface{}, int64, bool) {
 	if i, ok := c.Indexes[key]; ok {
-		return c.Items[i], true
+		// If here, the key is i the cache. Now check its validity.
+		return c.Items[i], c.AddedTime[i], true
 	} else {
-		return nil, false
+		return nil, 0, false
 	}
 }
 
