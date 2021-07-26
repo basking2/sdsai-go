@@ -16,6 +16,7 @@ import (
 type ConcurrentRingCache struct {
 	SizeLimit int
 	RingSize  int
+	AgeLimit  int64
 	Caches    []*LIFOCache
 	Locks     []*sync.RWMutex
 
@@ -24,11 +25,20 @@ type ConcurrentRingCache struct {
 	KeyHash func(key string, ringSize int) int
 }
 
-func NewConcurrentRingCache(ringSize int, cacheSize int) *ConcurrentRingCache {
+// Create a new concurrent ring cache.
+// ringSize is how many independent caches will be created.
+// cacheSize is how large each individual cache may be.
+// ageLimit is how old an item may be if it may be returned.
+//          If an item is fetched that is older than the ageLimit,
+//          it will not be returned and the cache it resides in will be
+//          updated to expire all older items.
+//          If this is less than 0, no limit is applied.
+func NewConcurrentRingCache(ringSize int, cacheSize int, ageLimit int64) *ConcurrentRingCache {
 	c := ConcurrentRingCache{}
 
 	c.RingSize = ringSize
 	c.SizeLimit = cacheSize
+	c.AgeLimit = ageLimit
 	c.Caches = make([]*LIFOCache, ringSize)
 	c.Locks = make([]*sync.RWMutex, ringSize)
 	c.KeyHash = func(s string, ringSize int) int {
@@ -49,6 +59,13 @@ func NewConcurrentRingCache(ringSize int, cacheSize int) *ConcurrentRingCache {
 	}
 
 	return &c
+}
+
+// Set the time function that each cache in the ring of caches will use.
+func (c *ConcurrentRingCache) SetTimeFunction(timeFunction func() int64) {
+	c.EachSubCache(func(c *LIFOCache) {
+		c.TimeFunction = timeFunction
+	})
 }
 
 // Lock each sub-cache and pass it to the handler function.
@@ -86,7 +103,27 @@ func (c *ConcurrentRingCache) Get(key string) (interface{}, bool) {
 
 	c.Locks[h].RLock()
 	defer c.Locks[h].RUnlock()
-	return c.Caches[h].Get(key)
+	item, addedAt, ok := c.Caches[h].Get(key)
+
+	if !ok {
+		return nil, false
+	}
+
+	// If there is an age limit...
+	if c.AgeLimit >= 0 {
+
+		// If the item is older than the age limit (using the cache's time function to get "now")...
+		if c.Caches[h].TimeFunction()-addedAt > c.AgeLimit {
+
+			// Clean up only this cache...
+			c.Caches[h].EvictOlderThan(c.AgeLimit)
+
+			// And return that we couldn't find the item.
+			return nil, false
+		}
+	}
+
+	return item, true
 }
 
 // Evict items from every sub-cache until they contain the ceiling of 1/N
