@@ -46,14 +46,28 @@ func TestConcurrentRingCacheConcurrent(t *testing.T) {
 }
 
 func TestConcurrentRingCacheTimeEvict(t *testing.T) {
-	cache := NewConcurrentRingCache(10, 5, 100)
+	cache := NewConcurrentRingCache(10, 5, 1)
 	called := false
 	cache.SetTimeFunction(func() int64 {
 		return time.Now().UnixNano()
 	})
 	cache.PutWithHandler("hi", "hellooooo", func(string, interface{}) { called = true })
 
-	cache.EvictOrderThan(time.Now().UnixNano() + 1000)
+	d, _ := time.ParseDuration("10ms")
+	time.Sleep(d)
+
+	if item, ok := cache.Get("hi"); ok {
+		t.Error("Item should not be present.")
+	} else {
+		switch s := item.(type) {
+		case string:
+			if s != "hellooooo" {
+				t.Error("s is not hellooooos")
+			}
+		default:
+			t.Error("Item is not a string.")
+		}
+	}
 
 	if !called {
 		t.Errorf("Did not call eviction callback.")
