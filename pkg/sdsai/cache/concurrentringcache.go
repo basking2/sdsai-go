@@ -169,3 +169,16 @@ func (c *ConcurrentRingCache) Size() int {
 
 	return size
 }
+
+// Atomically remove an item from the cache.
+func (c *ConcurrentRingCache) Remove(key string) (interface{}, bool) {
+	h := c.KeyHash(key, c.RingSize)
+
+	c.Locks[h].RLock()
+
+	item, ok := c.Caches[h].Remove(key)
+
+	c.Locks[h].RUnlock()
+
+	return item, ok
+}
