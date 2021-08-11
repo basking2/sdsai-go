@@ -174,11 +174,11 @@ func (c *ConcurrentRingCache) Size() int {
 func (c *ConcurrentRingCache) Remove(key string) (interface{}, bool) {
 	h := c.KeyHash(key, c.RingSize)
 
-	c.Locks[h].RLock()
+	c.Locks[h].Lock()
 
 	item, ok := c.Caches[h].Remove(key)
 
-	c.Locks[h].RUnlock()
+	c.Locks[h].Unlock()
 
 	return item, ok
 }
