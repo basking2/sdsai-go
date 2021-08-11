@@ -42,6 +42,10 @@ type LIFOCache struct {
 	// These integers need not be time, but it is convenient to think of them
 	// that way.
 	TimeFunction func() int64
+
+	// If set to non-nil, cache stats will be collected.
+	// Stats are not collected by default.
+	Stats *CacheStats
 }
 
 // Construct a new LIFOCache that uses the system clock in seconds
@@ -56,6 +60,7 @@ func NewLIFOCache() *LIFOCache {
 		TimeFunction: func() int64 {
 			return time.Now().Unix()
 		},
+		Stats: nil,
 	}
 
 	return &h
@@ -85,6 +90,7 @@ func (c *LIFOCache) Swap(i, j int) {
 // Push a string key into this cache.
 //
 // *Do not call this directly.* This is an internal API.
+// It must be public so that the Heap interface is implemented.
 func (c *LIFOCache) Push(x interface{}) {
 	switch s := x.(type) {
 	default:
@@ -180,9 +186,16 @@ func (c *LIFOCache) Put(key string, item interface{}) (interface{}, bool) {
 //     }
 func (c *LIFOCache) Get(key string) (interface{}, int64, bool) {
 	if i, ok := c.Indexes[key]; ok {
+		if c.Stats != nil {
+			c.Stats.Hit()
+		}
+
 		// If here, the key is i the cache. Now check its validity.
 		return c.Items[i], c.AddedTime[i], true
 	} else {
+		if c.Stats != nil {
+			c.Stats.Miss()
+		}
 		return nil, 0, false
 	}
 }
@@ -192,6 +205,11 @@ func (c *LIFOCache) Get(key string) (interface{}, int64, bool) {
 // If the cache is empty "" and nil are returned.
 func (c *LIFOCache) EvictNext() (string, interface{}) {
 	if len(c.Keys) > 0 {
+
+		if c.Stats != nil {
+			c.Stats.Evict()
+		}
+
 		k := c.Keys[0]
 		i := heap.Pop(c)
 		return k, i
