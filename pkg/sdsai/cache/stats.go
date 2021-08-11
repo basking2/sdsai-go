@@ -20,6 +20,12 @@ func (c *CacheStats) Evict() {
 	atomic.AddInt32(&c.evict, 1)
 }
 
+func (c *CacheStats) Reset() {
+	atomic.StoreInt32(&c.hit, 0)
+	atomic.StoreInt32(&c.miss, 0)
+	atomic.StoreInt32(&c.evict, 0)
+}
+
 // Return (hit, miss, evict) counts.
 func (c *CacheStats) GetStats() (int32, int32, int32) {
 	return c.hit, c.miss, c.evict

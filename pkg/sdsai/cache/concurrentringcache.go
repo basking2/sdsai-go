@@ -182,3 +182,35 @@ func (c *ConcurrentRingCache) Remove(key string) (interface{}, bool) {
 
 	return item, ok
 }
+
+// Set all the cache objects.
+func (c *ConcurrentRingCache) EnableStats() {
+	c.EachSubCache(func(c *LIFOCache) {
+		c.Stats = &CacheStats{0, 0, 0}
+	})
+}
+
+// Unset all the cache objects.
+func (c *ConcurrentRingCache) DisableStats() {
+	c.EachSubCache(func(c *LIFOCache) {
+		c.Stats = nil
+	})
+}
+
+// Set the stat objects with a new empty value.
+func (c *ConcurrentRingCache) ResetStats() {
+	c.EachSubCache(func(c *LIFOCache) {
+		c.Stats.Reset()
+	})
+}
+
+func (c *ConcurrentRingCache) GetStats() []*CacheStats {
+
+	stats := make([]*CacheStats, len(c.Caches))
+
+	for i, c := range c.Caches {
+		stats[i] = c.Stats
+	}
+
+	return stats
+}
