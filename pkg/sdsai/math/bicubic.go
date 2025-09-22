@@ -2,7 +2,7 @@ package math
 
 import (
 	"errors"
-  "sort"
+	"sort"
 )
 
 // A translation of Apache Commons Math.
@@ -142,15 +142,15 @@ func bicubicInterplationFunction(
 		}
 	}
 
-  interpF := func(x, y float64)(float64, error) {
-    i := searchIndex(x, xval)
-    j := searchIndex(y, yval)
+	interpF := func(x, y float64) (float64, error) {
+		i := searchIndex(x, xval)
+		j := searchIndex(y, yval)
 
-    xN := (x - xval[i]) / (xval[i+1] - xval[i])
-    yN := (y - yval[j]) / (yval[j+1] - yval[j])
+		xN := (x - xval[i]) / (xval[i+1] - xval[i])
+		yN := (y - yval[j]) / (yval[j+1] - yval[j])
 
-    return splines[i][j](xN, yN)
-  }
+		return splines[i][j](xN, yN)
+	}
 
 	return interpF, nil
 }
@@ -180,7 +180,7 @@ func computeSplineCoefficients(beta []float64) []float64 {
 		result := float64(0)
 		row := AINV[i]
 		for j := 0; j < NUM_COEFF; j++ {
-			result +=  (row[j] * beta[j])
+			result += (row[j] * beta[j])
 		}
 		a[i] = result
 	}
@@ -232,21 +232,21 @@ func bicubicFunction(coeff []float64) func(float64, float64) (float64, error) {
 // Search a sorted set of values for c.
 func searchIndex(c float64, val []float64) int {
 
-  idx := sort.SearchFloat64s(val, c)
+	idx := sort.SearchFloat64s(val, c)
 
-  // Too low or high. Return -1.
-  if idx == 0 || idx >= len(val) {
-    return -1
-  }
+	// Too low or high. Return -1.
+	if idx == 0 || idx >= len(val) {
+		return -1
+	}
 
-  // The returned index is used as a rage. Ensure that idx+1 is in the array list.
-  return idx - 1
+	// The returned index is used as a rage. Ensure that idx+1 is in the array list.
+	return idx - 1
 }
 
 func LinearCombination(a, b []float64) float64 {
 	result := float64(0)
 	for i := range a {
-		result = result + a[i] * b[i]
+		result = result + a[i]*b[i]
 	}
 	return result
 }

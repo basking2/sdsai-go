@@ -8,7 +8,10 @@ import (
 )
 
 func TestExpiration(t *testing.T) {
-	c := cache.NewConcurrentRingCache(10, 10, 1)
+	c, err := cache.NewConcurrentRingCache(10, 10, 1)
+	if err != nil {
+		t.Fatal(err)
+	}
 
 	c.SetTimeFunction(func() int64 {
 		return time.Now().UnixNano()

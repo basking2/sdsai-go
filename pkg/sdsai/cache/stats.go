@@ -28,5 +28,5 @@ func (c *CacheStats) Reset() {
 
 // Return (hit, miss, evict) counts.
 func (c *CacheStats) GetStats() (int32, int32, int32) {
-	return c.hit, c.miss, c.evict
+	return atomic.LoadInt32(&c.hit), atomic.LoadInt32(&c.miss), atomic.LoadInt32(&c.evict)
 }

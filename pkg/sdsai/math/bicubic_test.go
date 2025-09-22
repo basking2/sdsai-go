@@ -13,15 +13,15 @@ func TestBicubic(t *testing.T) {
 			{8, 9, 10, 11},
 			{12, 13, 14, 15}})
 
-    if err != nil {
-      t.Error(err)
-    }
+	if err != nil {
+		t.Error(err)
+	}
 
-    if isValid(0, 0) {
-      t.Fatal("Invalid point returned as valid.")
-    }
+	if isValid(0, 0) {
+		t.Fatal("Invalid point returned as valid.")
+	}
 
-    i, _ := interp(2, 2)
+	i, _ := interp(2, 2)
 
-    println(i)
-  }
+	println(i)
+}

@@ -8,7 +8,11 @@ import (
 )
 
 func TestConcurrentRingCache(t *testing.T) {
-	cache := NewConcurrentRingCache(1, 5, -1)
+	cache, err := NewConcurrentRingCache(1, 5, -1)
+
+	if err != nil {
+		t.Fatal(err)
+	}
 
 	evicted := 0
 
@@ -26,7 +30,10 @@ func TestConcurrentRingCache(t *testing.T) {
 }
 
 func TestConcurrentRingCacheConcurrent(t *testing.T) {
-	cache := NewConcurrentRingCache(10, 5, -1)
+	cache, err := NewConcurrentRingCache(10, 5, -1)
+	if err != nil {
+		t.Fatal(err)
+	}
 
 	wg := sync.WaitGroup{}
 	wg.Add(1000)
@@ -46,7 +53,11 @@ func TestConcurrentRingCacheConcurrent(t *testing.T) {
 }
 
 func TestConcurrentRingCacheTimeEvict(t *testing.T) {
-	cache := NewConcurrentRingCache(10, 5, 1)
+	cache, err := NewConcurrentRingCache(10, 5, 1)
+	if err != nil {
+		t.Fatal(err)
+	}
+
 	called := false
 	cache.SetTimeFunction(func() int64 {
 		return time.Now().UnixNano()

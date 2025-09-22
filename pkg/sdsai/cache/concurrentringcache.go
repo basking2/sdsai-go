@@ -1,9 +1,12 @@
 package cache
 
 import (
+	"errors"
 	"hash/crc32"
 	"sync"
 )
+
+var ConcurrentRingCacheNegativeRingError = errors.New("ringSize must be > 0")
 
 // A cache that is comprised other caches in a ring.
 //
@@ -12,7 +15,6 @@ import (
 //
 // Keys are hashed into the ring and added to their respective
 // caches.
-//
 type ConcurrentRingCache struct {
 	SizeLimit int
 	RingSize  int
@@ -29,11 +31,15 @@ type ConcurrentRingCache struct {
 // ringSize is how many independent caches will be created.
 // cacheSize is how large each individual cache may be.
 // ageLimit is how old an item may be if it may be returned.
-//          If an item is fetched that is older than the ageLimit,
-//          it will not be returned and the cache it resides in will be
-//          updated to expire all older items.
-//          If this is less than 0, no limit is applied.
-func NewConcurrentRingCache(ringSize int, cacheSize int, ageLimit int64) *ConcurrentRingCache {
+//
+//	If an item is fetched that is older than the ageLimit,
+//	it will not be returned and the cache it resides in will be
+//	updated to expire all older items.
+//	If this is less than 0, no limit is applied.
+func NewConcurrentRingCache(ringSize int, cacheSize int, ageLimit int64) (*ConcurrentRingCache, error) {
+	if ringSize <= 0 {
+		return nil, ConcurrentRingCacheNegativeRingError
+	}
 	c := ConcurrentRingCache{}
 
 	c.RingSize = ringSize
@@ -42,15 +48,8 @@ func NewConcurrentRingCache(ringSize int, cacheSize int, ageLimit int64) *Concur
 	c.Caches = make([]*LIFOCache, ringSize)
 	c.Locks = make([]*sync.RWMutex, ringSize)
 	c.KeyHash = func(s string, ringSize int) int {
-		h := int(crc32.ChecksumIEEE([]byte(s)))
-
-		if h < 0 {
-			h = -1
-		}
-
-		h = h % ringSize
-
-		return h
+		// Use uint32 modulo to avoid int overflow and negative results.
+		return int(crc32.ChecksumIEEE([]byte(s)) % uint32(ringSize))
 	}
 
 	for i := 0; i < ringSize; i++ {
@@ -58,7 +57,7 @@ func NewConcurrentRingCache(ringSize int, cacheSize int, ageLimit int64) *Concur
 		c.Locks[i] = &sync.RWMutex{}
 	}
 
-	return &c
+	return &c, nil
 }
 
 // Set the time function that each cache in the ring of caches will use.
@@ -152,7 +151,7 @@ func (c *ConcurrentRingCache) EnforceSizeLimit() {
 	})
 }
 
-func (c *ConcurrentRingCache) EvictOrderThan(tm int64) {
+func (c *ConcurrentRingCache) EvictOlderThan(tm int64) {
 	c.EachSubCache(func(c *LIFOCache) {
 		c.EvictOlderThan(tm)
 	})
